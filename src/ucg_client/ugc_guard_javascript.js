@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 /**
  * The UGC Guard client for reporting content.
  * 
@@ -11,45 +9,10 @@ class GuardClient {
    * @param {string} baseUrl - The base url where the UGC Guard api is available.
    * @param {string} organizationId - Your organization ID.
    */
-  constructor(baseUrl, organizationId) {
+  constructor({ organizationId, baseUrl = "https://api.ugc-guard.com/" }) {
     this.baseUrl = baseUrl;
     this.organizationId = organizationId;
-    
-    // Initialize axios client
-    this.client = axios.create({
-      baseURL: baseUrl,
-      timeout: 20000, // 20 seconds receive timeout
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
-  }
-
-  static _instance = null;
-
-  /**
-   * Singleton instance of the GuardClient.
-   * @returns {GuardClient} The singleton instance
-   */
-  static get instance() {
-    if (!GuardClient._instance) {
-      throw new Error(
-        'GuardClient has not been initialized. Call GuardClient.init() first.'
-      );
-    }
-    return GuardClient._instance;
-  }
-
-  /**
-   * Initializes the GuardClient.
-   * @param {Object} options - Initialization options
-   * @param {string} options.organizationId - Your organization ID
-   * @param {string} [options.baseUrl="https://api.ugc-guard.com/"] - The base URL
-   */
-  static init({ organizationId, baseUrl = "https://api.ugc-guard.com/" }) {
-    if (!GuardClient._instance) {
-      GuardClient._instance = new GuardClient(baseUrl, organizationId);
-    }
+    // No axios client needed
   }
 
   /**
@@ -139,16 +102,24 @@ class GuardClient {
         "channels": channels
       };
 
-      const response = await this.client.post('/reports/magic', requestBody, {
-        params: {
-          "report_category": reportCategory,
-          "secret": moduleSecret,
-          "custom_message": userMessage
-        }
+      const params = new URLSearchParams({
+        "report_category": reportCategory,
+        "secret": moduleSecret,
+        "custom_message": userMessage
       });
-
+      const response = await fetch(`${this.baseUrl.replace(/\/$/, '')}/reports/magic?${params.toString()}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
       onProgress?.(totalSteps, totalSteps);
-      return response.data;
+      return data;
     } catch (error) {
       throw error;
     }
@@ -233,7 +204,7 @@ class GuardClient {
         'Content must be of type MultiMediaBody to upload a file.'
       );
     }
-2
+
     if (this.isMultiMediaBody(content.content.body)) {
       try {
         const file = await this._actualUpload(moduleId, moduleSecret, content.content.body);
@@ -269,18 +240,18 @@ class GuardClient {
     // Convert bytes to Blob if needed
     const blob = new Blob([multiMediaBody.bytes], { type: multiMediaBody.mimeType });
     formData.append('upload_file', blob, multiMediaBody.filename);
-
-    const response = await this.client.post('/files/upload', formData, {
-      params: {
-        "module_id": moduleId,
-        secret: moduleSecret
-      },
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+    const params = new URLSearchParams({
+      "module_id": moduleId,
+      secret: moduleSecret
     });
-
-    return response.data;
+    const response = await fetch(`${this.baseUrl.replace(/\/$/, '')}/files/upload?${params.toString()}`,
+      {
+        method: 'POST',
+        body: formData,
+      }
+    );
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return await response.json();
   }
 
   /**
@@ -303,9 +274,7 @@ class GuardClient {
 }
 
 // Export for use in other modules
-// export default GuardClient;
 export { GuardClient };
 
 // Usage example:
-// GuardClient.init({ organizationId: 'your-org-id' });
-// const client = GuardClient.instance;
+// const client = new GuardClient({ organizationId: 'your-org-id' });

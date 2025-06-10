@@ -17,7 +17,6 @@
   "author": "SD Software-Design GmbH",
   "license": "MIT",
   "dependencies": {
-    "axios": "^1.9.0",
     "ugc_guard_javascript": "file:ugc_guard_javascript-1.0.0.tgz"
   }
 }
