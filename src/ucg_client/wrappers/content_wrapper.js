@@ -153,7 +153,7 @@ class MultiMediaBody extends Body {
       throw new Error('fromFilePath is only available in Node.js environment');
     }
 
-
+    console.log("Test", fs)
     const bytes = await fs.readFile(filePath);
     const filename = path.basename(filePath);
     const mimeType = mime.lookup(filename) || 'application/octet-stream';
