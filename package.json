@@ -18,5 +18,6 @@
   "author": "SD Software-Design GmbH",
   "license": "MIT",
   "dependencies": {
+    "mime-types": "^2.1.35"
   }
 }
