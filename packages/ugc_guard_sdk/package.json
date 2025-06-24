@@ -1,6 +1,6 @@
 {
   "name": "ugc-guard",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A JavaScript SDK for UGC Guard content moderation.",
   "author": "(SD Software-Design GmbH) Andrej Schwanke Name <as@software-design.de>",
   "license": "MIT",
@@ -17,7 +17,8 @@
   },
   "dependencies": {
     "ugc-guard-api": "^1.0.0",
-    "mime-types": "^2.1.35"
+    "mime-types": "^2.1.35",
+    "crypto-browserify": "^3.12.0"
   },
   "devDependencies": {}
 }
