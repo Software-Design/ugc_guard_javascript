@@ -83,13 +83,16 @@ class GuardClient {
       }
       // Prepare the reporter
       const reporterPerson = this.convertPersonToPersonDB(reporter, moduleId);
+      const reporterPersonDB = new Reporter(reporterPerson);
+
+
       // Prepare the report
       const report = new ReportCreate(moduleId, typeId);
       report.description = description;
       // Prepare the request body using OpenAPI model
       const requestBody = new BodyCreateMagicReport(
         report,
-        new Reporter(), // Reporter is a wrapper for Person
+        reporterPersonDB,
         mainContentCreate,
         mainContentSender,
         reportContext,
@@ -220,12 +223,15 @@ class GuardClient {
    * @returns {Promise<File>} Uploaded file
    */
   async _actualUpload(moduleId, moduleSecret, multiMediaBody) {
-    // Use OpenAPI FilesApi for upload
-    const fileObj = new File([multiMediaBody.bytes], multiMediaBody.filename, { type: multiMediaBody.mimeType });
+    // Use Buffer for Node.js file upload
+    const buffer = Buffer.from(multiMediaBody.bytes);
+    // Attach filename and mimetype for form-data
+    buffer.path = multiMediaBody.filename;
+    buffer.type = multiMediaBody.mimeType;
     return await new Promise((resolve, reject) => {
       this.filesApi.uploadFile(
         moduleId,
-        fileObj,
+        buffer,
         { secret: moduleSecret },
         (error, data) => {
           if (error) return reject(error);
