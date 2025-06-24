@@ -1,11 +1,4 @@
-import ApiClient from '../../../api/dist/ApiClient.js';
-import ReportsApi from '../../../api/dist/api/ReportsApi.js';
-import FilesApi from '../../../api/dist/api/FilesApi.js';
-import BodyCreateMagicReport from '../../../api/dist/model/BodyCreateMagicReport.js';
-import ContentCreate from '../../../api/dist/model/ContentCreate.js';
-import Person from '../../../api/dist/model/Person.js';
-import ReportCreate from '../../../api/dist/model/ReportCreate.js';
-import Reporter from '../../../api/dist/model/Reporter.js';
+import { ApiClient, ReportsApi, FilesApi, BodyCreateMagicReport, ContentCreate, Person, ReportCreate, Reporter } from 'ugc-guard-api';
 
 /**
  * The UGC Guard client for reporting content.

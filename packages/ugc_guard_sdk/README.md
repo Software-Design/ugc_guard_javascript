@@ -1,26 +1,33 @@
-How to set this up:
+# UGC Guard JavaScript SDK
 
-To install this package you can run:
-```
-npm install git+https://github.com/Software-Design/ugc_guard_javascript
-```
+A JavaScript SDK for UGC Guard content moderation.
 
+## Installation
 
-In root of this repo run:
-```
-npm link
+```sh
+npm install ugc-guard
 ```
 
+## Usage
 
-Then in another project run
-```
-npm link ugc-guard
-```
+```js
+import { GuardClient, test } from 'ugc-guard';
 
-Import the package like this:
-```
-import { test } from 'ugc-guard';
 test();
+const client = new GuardClient({ organizationId: 'your-org-id' });
+// ...
+```
+
+## API Client
+
+If you need the low-level OpenAPI client:
+
+```sh
+npm install ugc-guard-api
+```
+
+```js
+import { ApiClient, ReportsApi } from 'ugc-guard-api';
 ```
 
 

@@ -1,21 +1,17 @@
 {
   "name": "ugc-guard",
-  "description": "A JavaScript library for UGC Guard a content moderation tool, providing type definitions and utilities.",
   "version": "1.0.0",
-  "module": "dist/index.js",
-  "main": "dist/index.js",
-  "type": "module",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js"
-    }
-  },
-  "scripts": {
-    "build": "mkdir -p dist && cp -r src/* dist/"
-  },
-  "author": "SD Software-Design GmbH",
+  "description": "A JavaScript SDK for UGC Guard content moderation.",
+  "author": "(SD Software-Design GmbH) Andrej Schwanke Name <as@software-design.de>",
   "license": "MIT",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Software-Design/ugc_guard_javascript.git"
+  },
   "dependencies": {
     "ugc-guard-api": "^1.0.0",
     "mime-types": "^2.1.35"
