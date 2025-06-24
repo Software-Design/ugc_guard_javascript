@@ -2,15 +2,19 @@ How to set this up:
 
 To install this package you can run:
 ```
-npm install git+https://github.com/Software-Design/ugc_guard_javascript
+npm install ugc-guard 
 ```
 
+[ugc-guard](www.npmjs.com/package/ugc-guard)
+[ugc-guard-api](www.npmjs.com/package/ugc-guard-api)
 
-In root of this repo run:
+
+# Install locally for development
+
 ```
+cd ugc_guard_javascript/packages/ugc_guard_sdk
 npm link
 ```
-
 
 Then in another project run
 ```
