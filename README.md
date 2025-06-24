@@ -146,7 +146,6 @@ npm run build
 
 ### Update openapi client
 ```bash
-cd packages/api
 openapi-generator-cli generate -i https://api.ugc-guard.com/openapi.json -g javascript  --additional-properties=projectName=ugc_guard_javascript_api,projectVersion="1.0.0", -o packages/api
 ```
 
