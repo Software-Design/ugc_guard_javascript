@@ -1,15 +1,7 @@
 {
-  "name": "ugc-guard",
-  "description": "A JavaScript library for UGC Guard a content moderation tool, providing type definitions and utilities.",
-  "version": "1.0.0",
-  "module": "src/index.js",
-  "main": "src/index.js",
-  "type": "module",
-  "scripts": {
-  },
-  "author": "SD Software-Design GmbH",
-  "license": "MIT",
-  "dependencies": {
-    "mime-types": "^2.1.35"
-  }
+  "name": "ugc-guard-javascript",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ]
 }

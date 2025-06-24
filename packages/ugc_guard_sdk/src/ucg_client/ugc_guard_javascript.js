@@ -1,3 +1,6 @@
+import { ApiClient, ReportsApi, FilesApi } from 'ugc-guard-api';
+import { BodyCreateMagicReport, ContentCreate, Person, ReportCreate, Reporter } from 'ugc-guard-api';
+
 /**
  * The UGC Guard client for reporting content.
  * 
@@ -12,7 +15,9 @@ class GuardClient {
   constructor({ organizationId, baseUrl = "https://api.ugc-guard.com/" }) {
     this.baseUrl = baseUrl;
     this.organizationId = organizationId;
-    // No axios client needed
+    const apiClient = new ApiClient(baseUrl);
+    this.reportsApi = new ReportsApi(apiClient);
+    this.filesApi = new FilesApi(apiClient);
   }
 
   /**
@@ -49,7 +54,6 @@ class GuardClient {
   ) {
     try {
       const totalSteps = context.length + 2;
-      
       // Prepare the main report
       const mainContentCreate = await this.convertContentToContentCreate(
         mainContent,
@@ -57,17 +61,14 @@ class GuardClient {
         moduleSecret
       );
       onProgress?.(1, totalSteps);
-
       const mainContentSender = this.convertPersonToPersonDB(
         mainContent.creator,
         moduleId
       );
-
       // Prepare the report context
       const reportContext = [];
       const reportContextPersons = [];
       let i = 2;
-      
       for (const contentWrapper of context) {
         const contentCreate = await this.convertContentToContentCreate(
           contentWrapper,
@@ -81,45 +82,35 @@ class GuardClient {
         );
         i++;
       }
-
       // Prepare the reporter
       const reporterPerson = this.convertPersonToPersonDB(reporter, moduleId);
-
       // Prepare the report
-      const report = {
-        "module_id": moduleId,
-        "type_id": typeId,
-        "description": description
-      };
-
-      const requestBody = {
-        "report": report,
-        "reporter": reporterPerson,
-        "main_content": mainContentCreate,
-        "main_content_sender": mainContentSender,
-        "report_context": reportContext,
-        "report_context_persons": reportContextPersons,
-        "channels": channels
-      };
-
-      const params = new URLSearchParams({
-        "report_category": reportCategory,
-        "secret": moduleSecret,
-        "custom_message": userMessage
-      });
-      const response = await fetch(`${this.baseUrl.replace(/\/$/, '')}/reports/magic?${params.toString()}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
-        }
+      const report = new ReportCreate(moduleId, typeId);
+      report.description = description;
+      // Prepare the request body using OpenAPI model
+      const requestBody = new BodyCreateMagicReport(
+        report,
+        new Reporter(), // Reporter is a wrapper for Person
+        mainContentCreate,
+        mainContentSender,
+        reportContext,
+        reportContextPersons
       );
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
-      onProgress?.(totalSteps, totalSteps);
-      return data;
+      requestBody.channels = channels;
+      // Use OpenAPI ReportsApi
+      return await new Promise((resolve, reject) => {
+        this.reportsApi.createMagicReport(
+          reportCategory,
+          moduleSecret,
+          requestBody,
+          { customMessage: userMessage },
+          (error, data) => {
+            onProgress?.(totalSteps, totalSteps);
+            if (error) return reject(error);
+            resolve(data);
+          }
+        );
+      });
     } catch (error) {
       throw error;
     }
@@ -132,14 +123,14 @@ class GuardClient {
    * @returns {PersonDB} Converted person
    */
   convertPersonToPersonDB(person, moduleId) {
-    return {
-      "unique_partner_id": person.unique_partner_id,
-      "name": person.name,
-      "phone": person.phone,
-      "email": person.email,
-      "extra_data": person.additionalData,
-      "module_id": moduleId
-    };
+    // Use OpenAPI Person model
+    const p = new Person(moduleId);
+    p.unique_partner_id = person.unique_partner_id;
+    p.name = person.name;
+    p.phone = person.phone;
+    p.email = person.email;
+    p.extra_data = person.additionalData;
+    return p;
   }
 
   /**
@@ -153,33 +144,30 @@ class GuardClient {
     const reportContent = contentWrapper.content;
     const body = reportContent.body;
     const type = body.contentType;
-    
     if (type === "other" || type === "text") {
-      return {
-        "creator_id": contentWrapper.creator.unique_partner_id,
-        "body": body.body,
-        "body_type": type,
-        "created_at": reportContent.createdAt,
-        "extra_data": reportContent.additionalData,
-        "ip": reportContent.ip,
-        "unique_partner_id": reportContent.unique_partner_id
-      };
+      const content = new ContentCreate(contentWrapper.creator.unique_partner_id);
+      content.body = body.body;
+      content.body_type = type;
+      content.created_at = reportContent.createdAt;
+      content.extra_data = reportContent.additionalData;
+      content.ip = reportContent.ip;
+      content.unique_partner_id = reportContent.unique_partner_id;
+      return content;
     } else {
       // We need to upload the file first
       const files = await this.uploadFiles(moduleId, moduleSecret, contentWrapper);
       if (!files) {
         throw new Error('Failed to upload files.');
       }
-      return {
-        "creator_id": contentWrapper.creator.unique_partner_id,
-        "body": reportContent.body.body,
-        "body_type": type,
-        "created_at": reportContent.createdAt,
-        "extra_data": reportContent.additionalData,
-        "ip": reportContent.ip,
-        "unique_partner_id": reportContent.unique_partner_id,
-        "media_identifiers": files.map(f => f.id).filter(id => id)
-      };
+      const content = new ContentCreate(contentWrapper.creator.unique_partner_id);
+      content.body = reportContent.body.body;
+      content.body_type = type;
+      content.created_at = reportContent.createdAt;
+      content.extra_data = reportContent.additionalData;
+      content.ip = reportContent.ip;
+      content.unique_partner_id = reportContent.unique_partner_id;
+      content.media_identifiers = files.map(f => f.id).filter(id => id);
+      return content;
     }
   }
 
@@ -197,14 +185,12 @@ class GuardClient {
         'Content must be of type MultiMediaBody to upload a file.'
       );
     }
-
     if (!this.isMultiMediaBody(content.content.body) && 
         !this.isMultiMultiMediaBody(content.content.body)) {
       throw new Error(
         'Content must be of type MultiMediaBody to upload a file.'
       );
     }
-
     if (this.isMultiMediaBody(content.content.body)) {
       try {
         const file = await this._actualUpload(moduleId, moduleSecret, content.content.body);
@@ -235,23 +221,19 @@ class GuardClient {
    * @returns {Promise<File>} Uploaded file
    */
   async _actualUpload(moduleId, moduleSecret, multiMediaBody) {
-    const formData = new FormData();
-    
-    // Convert bytes to Blob if needed
-    const blob = new Blob([multiMediaBody.bytes], { type: multiMediaBody.mimeType });
-    formData.append('upload_file', blob, multiMediaBody.filename);
-    const params = new URLSearchParams({
-      "module_id": moduleId,
-      secret: moduleSecret
+    // Use OpenAPI FilesApi for upload
+    const fileObj = new File([multiMediaBody.bytes], multiMediaBody.filename, { type: multiMediaBody.mimeType });
+    return await new Promise((resolve, reject) => {
+      this.filesApi.uploadFile(
+        moduleId,
+        fileObj,
+        { secret: moduleSecret },
+        (error, data) => {
+          if (error) return reject(error);
+          resolve(data);
+        }
+      );
     });
-    const response = await fetch(`${this.baseUrl.replace(/\/$/, '')}/files/upload?${params.toString()}`,
-      {
-        method: 'POST',
-        body: formData,
-      }
-    );
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return await response.json();
   }
 
   /**
