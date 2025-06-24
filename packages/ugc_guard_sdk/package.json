@@ -17,7 +17,7 @@
   "author": "SD Software-Design GmbH",
   "license": "MIT",
   "dependencies": {
-    "ugc-guard-api": "workspace:*",
+    "ugc-guard-api": "^1.0.0",
     "mime-types": "^2.1.35"
   },
   "devDependencies": {}
