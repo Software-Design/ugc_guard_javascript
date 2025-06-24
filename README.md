@@ -4,13 +4,13 @@ A JavaScript SDK for UGC Guard content moderation.
 
 ## Installation
 
-Install the SDK using npm:
+Install the SDK using npm [ugc-guard](https://www.npmjs.com/package/ugc-guard):
 
 ```sh
 npm install ugc-guard
 ```
 
-If you need the low-level OpenAPI client:
+If you need the low-level OpenAPI client [ugc-guard-api](https://www.npmjs.com/package/ugc-guard-api):
 
 ```sh
 npm install ugc-guard-api
