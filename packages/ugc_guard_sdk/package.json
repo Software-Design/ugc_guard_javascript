@@ -12,6 +12,9 @@
     "type": "git",
     "url": "https://github.com/Software-Design/ugc_guard_javascript.git"
   },
+  "scripts": {
+    "build": "mkdir -p dist && cp -r src/* dist/"
+  },
   "dependencies": {
     "ugc-guard-api": "^1.0.0",
     "mime-types": "^2.1.35"
