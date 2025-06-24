@@ -127,4 +127,27 @@ const reportsApi = new ReportsApi(apiClient);
 ```
 
 
+## For development
+### Local installation
+```bash
+git pull git@github.com:Software-Design/ugc_guard_javascript.git
+cd packages/ugc_guard_sdk
+npm link
+```
+Then navigate to another javascript project and install `ugc-guard` with
+```bash
+npm link ugc-guard
+``` 
+If you make changes to the `ugc_guard_sdk` you need to rebuild the package with
+```bash
+cd packages/ugc_guard_sdk
+npm run build
+```
+
+### Update openapi client
+```bash
+cd packages/api
+openapi-generator-cli generate -i https://api.ugc-guard.com/openapi.json -g javascript  --additional-properties=projectName=ugc_guard_javascript_api,projectVersion="1.0.0", -o packages/api
+```
+
 
