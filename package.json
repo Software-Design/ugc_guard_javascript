@@ -1,6 +1,6 @@
 {
   "name": "ugc-guard-javascript",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "main": "index.js",
   "type": "module",
   "workspaces": [
