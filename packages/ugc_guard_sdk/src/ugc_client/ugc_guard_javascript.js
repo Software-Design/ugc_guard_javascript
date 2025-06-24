@@ -1,4 +1,5 @@
-import { ApiClient, ReportsApi, FilesApi, BodyCreateMagicReport, ContentCreate, Person, ReportCreate, Reporter } from 'ugc-guard-api';
+import { ApiClient, ReportsApi, FilesApi, BodyCreateMagicReport, ContentCreate, Person, ReportCreate, MainContentSender } from 'ugc-guard-api';
+import crypto from 'crypto';
 
 /**
  * The UGC Guard client for reporting content.
@@ -83,18 +84,22 @@ class GuardClient {
       }
       // Prepare the reporter
       const reporterPerson = this.convertPersonToPersonDB(reporter, moduleId);
-      const reporterPersonDB = new Reporter(reporterPerson);
+      const reporterPersonDB = { ...reporterPerson }; // Replace Reporter constructor with a plain object
 
+      const tmp = new Person(moduleId);
+      Object.assign(tmp, mainContentSender);
+      const mainContentSenderDB = { ...tmp }; // Replace MainContentSender constructor with a plain object
 
       // Prepare the report
       const report = new ReportCreate(moduleId, typeId);
       report.description = description;
+
       // Prepare the request body using OpenAPI model
       const requestBody = new BodyCreateMagicReport(
         report,
         reporterPersonDB,
         mainContentCreate,
-        mainContentSender,
+        mainContentSenderDB,
         reportContext,
         reportContextPersons
       );
@@ -257,6 +262,24 @@ class GuardClient {
    */
   isMultiMultiMediaBody(body) {
     return body && typeof body === 'object' && 'media' in body && Array.isArray(body.media);
+  }
+
+  /**
+   * Verifies the signature of a payload.
+   * @param {Object} payloadBody - Original request body to verify.
+   * @param {string} secretToken - UGC Guard webhook token.
+   * @param {string} signatureHeader - Header received from UGC Guard.
+   * @returns {boolean} True if the signature is valid, else false.
+   */
+  static verifySignature(payloadBody, secretToken, signatureHeader) {
+    if (!signatureHeader) {
+      return false;
+    }
+    const hash = crypto.createHmac('sha256', secretToken)
+      .update(JSON.stringify(payloadBody, Object.keys(payloadBody).sort()))
+      .digest('hex');
+    const expectedSignature = `sha256=${hash}`;
+    return crypto.timingSafeEqual(Buffer.from(expectedSignature), Buffer.from(signatureHeader));
   }
 }
 
